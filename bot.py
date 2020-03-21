@@ -17,6 +17,7 @@ URL = "https://api.coronatracker.com/v2/stats?countryCode=%s"
 LIST = "https://api.coronatracker.com/v2/stats/top?limit=1000"
 NEWS = "https://api.coronatracker.com/news/trending?limit=9&offset=0&countryCode=&country=&language=en"
 TA = "https://api.coronatracker.com/v1/travel-alert"
+WORLDOMETER = "https://www.worldometers.info/coronavirus/"
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -32,6 +33,8 @@ async def stat(message: types.Message):
     crawler = Crawler()
     response = crawler.get_response(URL % '')
     data = response.json()
+    print(message.from_user.full_name)
+    print(message.text)
     await message.answer(
         'Here is the latest stat crawled at : %s \n'
         '- Confirmed : %s \n'
@@ -45,6 +48,8 @@ async def stat(message: types.Message):
     crawler = Crawler()
     response = crawler.get_response(LIST)
     data = response.json()
+    print(message.from_user.full_name)
+    print(message.text)
     country_list = []
     country_list.append("`| CODE | COUNTRY | Confirmed | Deaths | Recovered |`")
     country_list.append("`| ---- | ------- | --------- | ------ | --------- |`")
@@ -57,6 +62,8 @@ async def stat(message: types.Message):
     await types.ChatActions.typing()
     crawler = Crawler()
     response = crawler.get_response(NEWS)
+    print(message.from_user.full_name)
+    print(message.text)
     data = response.json()['items']
     news_list = []
     for news in data:
@@ -79,6 +86,8 @@ async def send_welcome(message: types.Message, regexp_command):
             )
     else:
         await message.answer("Country code not known")
+    print(message.from_user.full_name)
+    print(message.text)
 #    await message.reply(f"You have requested an item with id <code>{regexp_command.group(1)}</code>")
     
 
@@ -90,15 +99,66 @@ async def send_welcome(message: types.Message, regexp_command):
             response = crawler.get_response(URL % country_id.upper())
             data = response.json()
             await message.answer(
-                'Here is the latest stat crawled at : %s \n'
+                'Here is the latest stat for %s crawled at : %s \n'
                 '- Confirmed : %s \n'
                 '- Deaths : %s \n'
-                '- Recovered : %s \n' % (data["created"], data["confirmed"], data["deaths"], data["recovered"])
+                '- Recovered : %s \n' % (data["countryName"], data["created"], data["confirmed"], data["deaths"], data["recovered"])
             )
     else:
         await message.answer("Country code not known")
+    print(message.from_user.full_name)
+    print(message.text)
 #    await message.reply(f"You have requested an item with id <code>{regexp_command.group(1)}</code>")
 
+
+@dp.message_handler()
+async def echo(message: types.Message):
+    # old style:
+    # await bot.send_message(message.chat.id, message.text)
+    crawler = Crawler()
+    soup = crawler.get_soup(WORLDOMETER)
+    data = []
+    table = soup.select_one('table#main_table_countries_today')
+    table_body = table.find('tbody')
+    rows = table_body.find_all('tr')
+    for table_row in table_body.find_all('tr'):
+        columns = table_row.findAll('td')
+        output_row = []
+        for column in columns:
+            output_row.append(column.text.strip().lower())
+        data.append(output_row)
+
+    print(message.from_user.full_name)
+    print(message.text)
+
+    try: 
+        result = data[index_2d(data,message.text)[0]]
+        await message.answer(
+            'Latest Stat from WORLDOMETER for country %s \n'
+            'Total Cases : %s \n' 
+            'New Cases : %s \n' 
+            'Total Deaths : %s \n'
+            'New Deaths : %s \n'
+            'Total Recovered : %s \n'
+            'Active Cases : %s \n'
+            'Serious : %s \n'
+            'Total Case per 1M Population : %s \n' % (result[0],result[1],result[2],result[3],result[4],result[5],result[6],result[7],result[8])
+            )
+        #await message.answer('\n'.join(data[index_2d(data,message.text)[0]]))
+    except:
+        await message.answer('please try other command or type country you want to get info')
+
+
+    
+
+
+def index_2d(data, search):
+    for i, e in enumerate(data):
+        try:
+            return i, e.index(search.lower())
+        except ValueError:
+            pass
+    raise ValueError("{} is not in list".format(repr(search)))
 
 
 if __name__ == '__main__':
