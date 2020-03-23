@@ -12,7 +12,7 @@ from aiogram.utils.markdown import bold, code, italic, text
 from crawler import Crawler
 import pycountry
 
-API_TOKEN = '1072123204:AAGOx9CcVAB4haPE4gkdNyLjNwLbIeQMFd4'
+API_TOKEN = ''
 URL = "https://api.coronatracker.com/v2/stats?countryCode=%s"
 LIST = "https://api.coronatracker.com/v2/stats/top?limit=1000"
 NEWS = "https://api.coronatracker.com/news/trending?limit=9&offset=0&countryCode=&country=&language=en"
