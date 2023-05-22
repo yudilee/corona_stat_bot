@@ -1,6 +1,6 @@
 # App requirements
 aiogram==2.6.1
 beautifulsoup4==4.8.2
-requests==2.22.0
+requests==2.31.0
 cfscrape==2.0.8
 pycountry==19.8.18
